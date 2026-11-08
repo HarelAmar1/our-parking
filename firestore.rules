@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isMember() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/members/$(request.auth.uid));
+    }
+    function memberName() {
+      return get(/databases/$(database)/documents/members/$(request.auth.uid)).data.name;
+    }
+    match /members/{userId} {
+      allow get: if isMember() && request.auth.uid == userId;
+      allow list, create, update, delete: if false;
+    }
+    match /parking/current {
+      allow get: if isMember();
+      allow list, create, delete: if false;
+      allow update: if isMember()
+        && request.resource.data.keys().hasAll(['occupied', 'occupiedBy', 'occupiedByName', 'updated'])
+        && request.resource.data.keys().hasOnly(['occupied', 'occupiedBy', 'occupiedByName', 'updated'])
+        && request.resource.data.updated == request.time
+        && (
+          (resource.data.occupied == false && request.resource.data.occupied == true
+            && request.resource.data.occupiedBy == request.auth.uid
+            && request.resource.data.occupiedByName == memberName())
+          ||
+          (resource.data.occupied == true && resource.data.occupiedBy == request.auth.uid
+            && request.resource.data.occupied == false
+            && request.resource.data.occupiedBy == ''
+            && request.resource.data.occupiedByName == '')
+        );
+    }
+  }
+}
