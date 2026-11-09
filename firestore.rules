@@ -1,17 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
     function isMember() {
-      return request.auth != null &&
+      return signedIn() &&
         exists(/databases/$(database)/documents/members/$(request.auth.uid));
     }
     function memberName() {
       return get(/databases/$(database)/documents/members/$(request.auth.uid)).data.name;
     }
+
     match /members/{userId} {
-      allow get: if isMember() && request.auth.uid == userId;
-      allow list, create, update, delete: if false;
+      allow get: if signedIn() && request.auth.uid == userId;
+      allow list, delete: if false;
+      allow create: if signedIn() && request.auth.token.firebase.sign_in_provider == 'anonymous'
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['name'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 30;
+      allow update: if false;
     }
+
     match /parking/current {
       allow get: if isMember();
       allow list, create, delete: if false;
@@ -20,14 +32,18 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['occupied', 'occupiedBy', 'occupiedByName', 'updated'])
         && request.resource.data.updated == request.time
         && (
-          (resource.data.occupied == false && request.resource.data.occupied == true
+          (
+            resource.data.occupied == false
+            && request.resource.data.occupied == true
             && request.resource.data.occupiedBy == request.auth.uid
-            && request.resource.data.occupiedByName == memberName())
-          ||
-          (resource.data.occupied == true && resource.data.occupiedBy == request.auth.uid
+            && request.resource.data.occupiedByName == memberName()
+          ) || (
+            resource.data.occupied == true
+            && resource.data.occupiedBy == request.auth.uid
             && request.resource.data.occupied == false
             && request.resource.data.occupiedBy == ''
-            && request.resource.data.occupiedByName == '')
+            && request.resource.data.occupiedByName == ''
+          )
         );
     }
   }

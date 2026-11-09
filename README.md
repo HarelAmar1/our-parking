@@ -1,21 +1,17 @@
-# החניה שלנו — גרסת אייפון
+# החניה שלנו — כניסה עם שם בלבד
 
-הגרסה הזו מותאמת לפרויקט Firebase `parking-b6302`, למסמך `parking/current` ולשדה `updated`.
+Firebase Project: `parking-b6302` / Firestore `parking/current`.
 
-## העלאה מאייפון
-1. שמור את קובץ ZIP באפליקציית "קבצים" ופתח אותו כדי לחלץ את התיקייה.
-2. צור מאגר GitHub פרטי ריק בשם `our-parking` (בלי README אוטומטי).
-3. דרך Safari, היכנס למאגר, בחר Add file → Upload files.
-4. העלה תחילה את הקבצים שבשורש: `index.html`, `package.json`, `vite.config.js`, `firestore.rules`, `README.md` (אפשר גם `.gitignore` אם נוח).
-5. צור תיקייה `src` במאגר דרך Add file → Create new file וכתוב בשם הקובץ `src/.gitkeep`; שמור. היכנס ל-`src` → Add file → Upload files, והעלה `main.jsx`, `firebase.js`, `style.css`.
-6. באותה דרך צור `public/.gitkeep`, היכנס ל-public והעלה את שלוש תמונות ה-PNG.
-7. התחבר ל-Vercel → New Project → Import מאגר GitHub → Vite → Deploy. אין צורך במשתני סביבה.
-8. Authentication → Settings → Authorized domains: הוסף את כתובת האתר בדומיין vercel.app (בלי https:// ובלי נתיב) אם נדרש.
-9. פתח את האתר ב-Safari → Share → Add to Home Screen.
+## לפני פרסום
+1. Firebase Authentication → Sign-in method → Anonymous → Enabled.
+2. Firebase Firestore → Rules: replace current rules with `firestore.rules`, then Publish.
+3. If the parking spot is currently occupied by the **old email/password account**, release it from the old live site first; otherwise only a Firebase console admin can reset it to unoccupied.
+4. Run `npm install && npm run build`, then push to GitHub. Vercel should redeploy automatically.
+5. Test on a new browser or private tab first, enter a name, claim and release the spot.
 
-## בדיקות
-- הכנס אימייל וסיסמה שנוצרו ב-Firebase Authentication; ה-UID חייב להיות מסמך ב-members עם השדה name.
-- אם החניה פנויה, לחץ "תפסתי את החניה". רק מי שתפס יכול לפנות.
-- כללי Firestore כבר פורסמו דרך הקונסול בשיחה. אין צורך להעלות את `firestore.rules` לשרת; הוא מצורף כגיבוי/תיעוד.
+## Important security limitation
+Anyone who knows the public app URL can create an anonymous account and enter any name. This is **not** verification of roommate identity. Same name on a new device is a different account and cannot release the old device's claim. Clearing browser storage may similarly lose the anonymous account. For a private roommates-only app, introduce an invitation system or individually provisioned accounts.
 
-**אין להעלות סיסמאות של משתמשים או Firebase Admin / service-account keys.**
+## Data structure
+`members/{anonymousUID}`: `{ name: string }` created on first use.
+`parking/current`: `{ occupied: boolean, occupiedBy: string, occupiedByName: string, updated: timestamp }`.
