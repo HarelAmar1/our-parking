@@ -1,81 +1,184 @@
-# החניה שלנו — גרסה 2
 
-שדרוג לאפליקציית PWA הקיימת: קוד הזמנה, שינוי שם/משתמש, שחרור חירום והתראות Push בפינוי החניה.
+# 🚗 Our Parking
 
-## לפני שמתחילים — חשוב
+A simple and smart parking management app for shared apartments.
 
-הגרסה הזאת דורשת **Vercel Functions** וסודות שרת. אל תפרסם את שינויי ה־Firestore Rules לפני שהשרת החדש נפרס ומוגדר, כי הוא יחסום את הגרסה הישנה.
+Our Parking allows apartment members to check parking availability in real time, reserve a shared parking spot, and get notified when it becomes available.
 
-אין לשים בקוד או ב־GitHub מפתחות פרטיים, קוד דירה או קוד מנהל. **לעולם אל תכניס את JSON חשבון השירות לתיקיית `src` או למשתנה `VITE_`**.
+🌐 **Live App:** https://our-parking.vercel.app
 
-### 1. גיבוי
+## ✨ Features
 
-```bash
-cd ~/repos/our-parking
-git status
-git branch backup-before-v2
-git status
+- 🚗 **Real-Time Parking Status** — Instantly see whether the parking spot is available or occupied.
+- 👤 **User Management** — Register with your name and a private apartment invitation code.
+- 🔒 **Secure Parking Control** — Only the member who occupied the spot can release it.
+- 🔑 **Manager Override** — Emergency parking release using a protected manager code.
+- 🔔 **Push Notifications** — Receive notifications when the parking spot becomes available.
+- ✏️ **Profile Management** — Update your display name or switch accounts.
+- 📱 **Progressive Web App (PWA)** — Install directly on iPhone or Android.
+- ☁️ **Cloud Sync** — Parking status stays synchronized across connected devices.
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| React | Frontend UI |
+| Vite | Development and build |
+| Firebase Authentication | Anonymous user authentication |
+| Cloud Firestore | Real-time database |
+| Firebase Admin SDK | Secure backend operations |
+| Vercel | Hosting and serverless API |
+| Web Push | Push notifications |
+| Service Worker | PWA and notification support |
+
+## 🏗️ Project Structure
+
+```text
+our-parking/
+├── api/
+│   ├── register.js
+│   ├── parking.js
+│   ├── profile.js
+│   └── notifications.js
+├── server/
+│   └── common.js
+├── src/
+│   ├── firebase.js
+│   ├── main.jsx
+│   ├── style.css
+│   └── sw.js
+├── public/
+├── firestore.rules
+├── vite.config.js
+├── package.json
+└── README.md
 ```
 
-פנה את החניה לפני מעבר הגרסה כדי להימנע מבעלות תקועה. משתמשים שנרשמו בעבר ממשיכים לפעול.
+## 🚀 Getting Started
 
-### 2. העתקת הקבצים
+### Prerequisites
 
-חלץ את ה־ZIP והעתק את *תוכנו* (כולל `api`, `server`, `src`, `public`) לשורש המאגר. לא למחוק את `.git`. אין להעלות את `dist`, `node_modules` או `.env`.
+- Node.js and npm
+- Firebase project
+- Vercel project
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/HarelAmar1/our-parking.git
+cd our-parking
+```
+
+Install dependencies:
 
 ```bash
 npm install
+```
+
+Start the frontend development server:
+
+```bash
+npm run dev
+```
+
+Build for production:
+
+```bash
 npm run build
 ```
 
-`npm run dev` מציג את המסך אבל פניות ל־`/api` אינן נענות על ידי Vite לבדו. לבדיקה מלאה יש להשתמש ב־Vercel deployment או `vercel dev` עם משתני הסביבה.
+**Note:** The Vite development server does not run the Vercel API functions. Full local development requires a configured serverless environment.
 
-### 3. יצירת פרטי Firebase Admin
+## ⚙️ Environment Variables
 
-Firebase Console → Project Settings → Service accounts → Generate new private key. שמור את ה־JSON במקום פרטי. ב־Vercel > Project Settings > Environment Variables צור את `FIREBASE_SERVICE_ACCOUNT_JSON` והדבק את כל ה־JSON כמחרוזת אחת (לא בתוך קוד הפרויקט). חשבון שירות הוא מפתח רב-עוצמה; אין לשתף אותו. לנהל ולהחליף מפתחות במקרה של דליפה.
+Configure the following variables in your Vercel project:
 
-### 4. קודי כניסה
+| Variable | Description |
+|----------|-------------|
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin service account credentials |
+| `INVITE_CODE` | Private apartment registration code |
+| `MANAGER_CODE` | Emergency parking manager code |
+| `VAPID_PUBLIC_KEY` | Public Web Push key |
+| `VAPID_PRIVATE_KEY` | Private Web Push key |
+| `VAPID_SUBJECT` | Web Push contact identifier |
+| `VITE_VAPID_PUBLIC_KEY` | Public VAPID key exposed to the frontend |
 
-הגדר ב־Vercel שני משתני שרת נפרדים:
-- `INVITE_CODE`: קוד הזמנה ארוך ואקראי (מומלץ 16 תווים אקראיים לפחות). כל שותף חדש יקליד אותו בהרשמה הראשונה בלבד.
-- `MANAGER_CODE`: **קוד אחר** וארוך (מומלץ 16 תווים אקראיים לפחות), שמור רק אצל המנהל. מאפשר שחרור חירום של חניה תפוסה.
+Never commit private credentials, secret codes, or service account JSON files to GitHub.
 
-אל תשתמש בקוד קצר של 4 ספרות; מנגנון זה לא כולל חסימת brute-force מובנית, ולכן קודים ארוכים ואקראיים חיוניים. מי שיודע את קוד ההזמנה יכול ליצור חשבונות — שתף אותו רק עם השותפים. לשינוי קוד קיים, ערוך את משתני Vercel ופרסם מחדש (Redeploy).
+## 🔐 Security
 
-### 5. התראות Push
+The application uses Firebase Authentication and protected serverless API endpoints.
 
-Apple תומכת בהתראות Web Push **באייפון עם iOS 16.4 ומעלה**, כאשר ה־PWA הותקנה במסך הבית ונפתחה משם, ורק אחרי לחיצה על כפתור אישור ההתראות. המשתמש בוחר אם לאשר אותן.
+- Users must authenticate before making API requests.
+- Apartment members register using a private invitation code.
+- Firestore Security Rules prevent direct client-side modifications.
+- Parking operations are processed through server-side transactions.
+- Only the current parking owner can perform a normal release.
+- Manager override requires a separate secret code.
+- Failed manager-code attempts are rate-limited per account.
+- Push subscriptions are associated with authenticated users.
 
-צור צמד מפתחות VAPID על המחשב (ללא העלאה ל־Git):
+Firebase Admin SDK handles privileged database operations on the server.
 
-```bash
-npx web-push generate-vapid-keys
-```
+## 🔔 Push Notifications
 
-הוסף ל־Vercel Environment Variables:
-- `VAPID_PUBLIC_KEY` = המפתח הציבורי.
-- `VAPID_PRIVATE_KEY` = המפתח הפרטי.
-- `VAPID_SUBJECT` = `mailto:your-real-email@example.com` (להחליף באימייל שלך).
-- `VITE_VAPID_PUBLIC_KEY` = אותו מפתח ציבורי, לצורך בניית האפליקציה בדפדפן.
+Members can enable notifications from the application settings.
 
-**אין לשים `VAPID_PRIVATE_KEY` במשתנה `VITE_`.** אם לא תגדיר את מפתחות VAPID, שאר האפליקציה יכולה לעבוד אבל ההתראות לא יפעלו.
+When the parking spot is released, subscribed members can receive a notification.
 
-Push נשלח כשהחניה מתפנה באמצעות API מאומת; משלוח אינו מובטח (תלוי בחיבור ובהרשאות המכשיר). שחרור חניה נשמר גם אם שירות ההתראות נכשל. מינוי להתראות הוא לפי התקנת מכשיר; לחיצה על הכפתור בכל מכשיר רושמת אותו.
+On iPhone, Web Push requires the app to be added to the Home Screen on a supported iOS version.
 
-### 6. פרסום סדר פעולות
+Notification availability and delivery depend on device permissions, browser support, and operating-system restrictions.
 
-1. הגדר ב־Vercel את כל משתני הסביבה, לרבות `VITE_VAPID_PUBLIC_KEY`.
-2. בצע Commit+Push ל־main — Vercel יפרסם את פונקציות `/api` והאפליקציה.
-3. בדוק שהאתר נפתח. **עדיין לא לפרסם את `firestore.rules` החדשים לפני שה־API עובד**.
-4. כעת Firebase Firestore → Rules → הדבק את `firestore.rules` החדשים → Publish. חוקי השרת החדשים מגבילים קריאה למשתמש רשום ומונעים כתיבה ישירה של לקוחות; כל שינוי נעשה דרך API שבודק Firebase ID token.
-5. בדוק: הרשמה חדשה עם קוד, תפיסה, פינוי, שינוי שם, שחרור עם קוד מנהל, הרשאת התראות ופינוי ממכשיר אחר.
+## 📱 Install on Mobile
 
-**הערה למיגרציה:** חשבונות שכבר נוצרו ב־`members` נשארים רשומים, גם אם אין להם שדה קוד. להרשאות מחמירות אפשר בהמשך לעבור לאוסף אישורים מנהלתי ולבטל חשבונות ישנים.
+### iPhone
 
-### 7. חשבונות/החלפת מכשיר
+1. Open the app in Safari.
+2. Tap **Share**.
+3. Select **Add to Home Screen**.
+4. Launch the app from your Home Screen.
 
-"שינוי שם" שומר את אותו UID. "החלפת משתמש" מתנתק מה־UID האנונימי ויוצר משתמש חדש, שמחייב שם וקוד הזמנה. חשבון אנונימי אינו זהות ניידת בין מכשירים. אם נמחקים נתוני הדפדפן או עוברים מכשיר, אי אפשר להבטיח שחזור בעלות החניה; מנהל יכול לפנות אותה בקוד החירום. **שם בלבד אינו מוכיח זהות של אדם**.
+### Android
 
-### 8. עלויות ואבטחה
+1. Open the app in Chrome.
+2. Tap the three-dot menu.
+3. Select **Install app** or **Add to Home screen**.
+4. Launch the installed app.
 
-מסד הנתונים יכול להישאר ב־Spark בהתאם למכסות; ה־API פועל דרך Vercel Functions בכפוף למסלול/מכסות Vercel. חשבון שירות עם הרשאות Admin עוקף Firestore Rules ולכן חשוב לשמור אותו רק בשרת. יש להגביל גישה למפתחות ב־Vercel ולנהל הוצאות/מכסות. מומלץ להוסיף בעתיד הגבלת קצב (rate limiting) בהרשמה ובקוד מנהל, ו־App Check אם רלוונטי.
+## ☁️ Deployment
+
+The project is deployed using Vercel with GitHub integration.
+
+Changes pushed to the production branch trigger a new deployment.
+
+Before deploying, make sure:
+
+- All required environment variables are configured.
+- Firebase Authentication is enabled.
+- Firestore is initialized.
+- The required Firestore Security Rules are published.
+- The Firebase Admin service account has the necessary permissions.
+
+## 📌 Roadmap
+
+- [x] Real-time parking availability
+- [x] User registration with invitation code
+- [x] Parking ownership and release
+- [x] Manager emergency override
+- [x] Push notifications
+- [x] Mobile PWA support
+- [ ] Home screen parking status widget
+- [ ] Parking activity history
+
+## 👨‍💻 Author
+
+**Harel Amar**
+
+GitHub: [@HarelAmar1](https://github.com/HarelAmar1)
+
+---
+
+Built to make shared parking simple. 🚗
