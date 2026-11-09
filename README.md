@@ -1,37 +1,89 @@
 
-# 🚗 Our Parking
+# Our Parking | מערכת לניהול חניה משותפת
 
-A simple and smart parking management app for shared apartments.
+מערכת אינטרנטית לניהול חניה משותפת בבניין מגורים, המאפשרת לדיירים לצפות בזמן אמת במצב החניה, לעדכן את זמינותה ולקבל התראות כאשר החניה מתפנה.
 
-Our Parking allows apartment members to check parking availability in real time, reserve a shared parking spot, and get notified when it becomes available.
+המערכת פותחה במטרה לספק פתרון פשוט ונוח לניהול מקום חניה משותף, תוך שמירה על סנכרון בין המשתמשים, בקרת הרשאות והתאמה למכשירים ניידים.
 
-🌐 **Live App:** https://our-parking.vercel.app
+**קישור למערכת:** https://our-parking.vercel.app
 
-## ✨ Features
+---
 
-- 🚗 **Real-Time Parking Status** — Instantly see whether the parking spot is available or occupied.
-- 👤 **User Management** — Register with your name and a private apartment invitation code.
-- 🔒 **Secure Parking Control** — Only the member who occupied the spot can release it.
-- 🔑 **Manager Override** — Emergency parking release using a protected manager code.
-- 🔔 **Push Notifications** — Receive notifications when the parking spot becomes available.
-- ✏️ **Profile Management** — Update your display name or switch accounts.
-- 📱 **Progressive Web App (PWA)** — Install directly on iPhone or Android.
-- ☁️ **Cloud Sync** — Parking status stays synchronized across connected devices.
+## יכולות המערכת
 
-## 🛠️ Tech Stack
+- **סטטוס חניה בזמן אמת** — הצגת מצב החניה כפנויה או תפוסה, כולל שם המשתמש שחונה בה.
+- **ניהול משתמשים** — הרשמה באמצעות שם וקוד הזמנה ייעודי לדירה.
+- **תפיסת חניה ושחרור** — עדכון מצב החניה, כאשר שחרור רגיל מתאפשר רק למשתמש שתפס אותה.
+- **הרשאות מנהל** — שחרור חניה במקרים חריגים באמצעות קוד מנהל.
+- **התראות Push** — אפשרות לקבלת התראה כאשר החניה מתפנה.
+- **ניהול פרופיל** — שינוי שם המשתמש והחלפת משתמש במכשיר.
+- **תמיכה במכשירים ניידים** — התקנת המערכת כ־PWA במכשירי Android ו־iOS.
+- **סנכרון נתונים** — עדכון מצב החניה בין מכשירים באמצעות Cloud Firestore.
 
-| Technology | Purpose |
-|------------|---------|
-| React | Frontend UI |
-| Vite | Development and build |
-| Firebase Authentication | Anonymous user authentication |
-| Cloud Firestore | Real-time database |
-| Firebase Admin SDK | Secure backend operations |
-| Vercel | Hosting and serverless API |
-| Web Push | Push notifications |
-| Service Worker | PWA and notification support |
+## טכנולוגיות
 
-## 🏗️ Project Structure
+| טכנולוגיה | שימוש במערכת |
+|---|---|
+| React | פיתוח ממשק המשתמש |
+| Vite | סביבת פיתוח ובניית הפרויקט |
+| JavaScript | פיתוח צד לקוח וצד שרת |
+| Firebase Authentication | אימות משתמשים אנונימי |
+| Cloud Firestore | מסד נתונים וסנכרון בזמן אמת |
+| Firebase Admin SDK | גישה מאובטחת לנתונים מצד השרת |
+| Vercel | אירוח המערכת והרצת פונקציות API |
+| Web Push API | שליחת התראות למשתמשים |
+| Service Worker | תמיכה ב־PWA ובהתראות |
+
+## ארכיטקטורת המערכת
+
+המערכת מבוססת על הפרדה בין שלושה רכיבים מרכזיים:
+
+### צד לקוח (Frontend)
+
+ממשק משתמש המבוסס על React, האחראי על הצגת מצב החניה, ניהול פרופיל המשתמש, ביצוע פעולות וקבלת עדכונים בזמן אמת.
+
+### צד שרת (Backend)
+
+פונקציות Serverless המתארחות ב־Vercel ואחראיות על:
+
+- אימות משתמשים באמצעות Firebase Authentication.
+- בדיקת קוד ההזמנה בעת הרשמה.
+- בדיקת הרשאות לפני ביצוע פעולות.
+- תפיסת חניה ושחרורה.
+- ניהול פרטי משתמשים.
+- ניהול מנויי התראות ושליחת הודעות Push.
+
+### מסד נתונים (Database)
+
+Cloud Firestore משמש לאחסון מצב החניה, פרטי המשתמשים ומנויי ההתראות.
+
+פעולות כתיבה מתבצעות באמצעות Firebase Admin SDK בצד השרת, תוך שימוש ב־Transactions לשמירה על עקביות הנתונים.
+
+### תרשים זרימת המידע
+
+```text
+              User / Mobile Device
+                       |
+                       v
+                 React Frontend
+                       |
+            +----------+----------+
+            |                     |
+            v                     v
+      Vercel API            Firebase Client
+            |                     |
+            v                     |
+     Firebase Admin               |
+            |                     |
+            +----------+----------+
+                       |
+                       v
+                Cloud Firestore
+```
+
+קריאת מצב החניה מתבצעת ישירות מול Firestore בהתאם לכללי האבטחה. פעולות המשנות נתונים עוברות דרך פונקציות ה־API.
+
+## מבנה הפרויקט
 
 ```text
 our-parking/
@@ -51,134 +103,164 @@ our-parking/
 ├── firestore.rules
 ├── vite.config.js
 ├── package.json
+├── package-lock.json
 └── README.md
 ```
 
-## 🚀 Getting Started
+### קבצים מרכזיים
 
-### Prerequisites
+| קובץ | תפקיד |
+|---|---|
+| `src/main.jsx` | ממשק המשתמש והלוגיקה בצד הלקוח |
+| `src/firebase.js` | הגדרת החיבור לשירותי Firebase |
+| `src/sw.js` | Service Worker והתראות Push |
+| `api/register.js` | הרשמת משתמשים באמצעות קוד הזמנה |
+| `api/parking.js` | תפיסה ושחרור חניה, כולל שחרור מנהל |
+| `api/profile.js` | עדכון פרטי משתמש |
+| `api/notifications.js` | רישום וביטול מנויי התראות |
+| `server/common.js` | פונקציות משותפות, אימות משתמשים ו־Firebase Admin |
+| `firestore.rules` | הגדרת הרשאות הגישה למסד הנתונים |
+| `vite.config.js` | הגדרות Vite ו־PWA |
 
-- Node.js and npm
-- Firebase project
-- Vercel project
+## התקנה והרצה מקומית
 
-### Installation
+### דרישות מקדימות
 
-Clone the repository:
+- Node.js ו־npm
+- חשבון Firebase ופרויקט מוגדר
+- חשבון Vercel לצורך הרצת פונקציות השרת
+
+### שכפול הפרויקט
 
 ```bash
 git clone https://github.com/HarelAmar1/our-parking.git
 cd our-parking
 ```
 
-Install dependencies:
+### התקנת תלויות
 
 ```bash
 npm install
 ```
 
-Start the frontend development server:
+### הפעלת סביבת פיתוח
 
 ```bash
 npm run dev
 ```
 
-Build for production:
+שרת הפיתוח של Vite מאפשר להפעיל את ממשק המשתמש באופן מקומי.
+
+**חשוב:** פקודה זו אינה מפעילה את פונקציות ה־API של Vercel. לצורך בדיקה מלאה של הרשמה, תפיסת חניה ושאר פעולות השרת, נדרשת סביבת Serverless מוגדרת.
+
+### בניית הפרויקט
 
 ```bash
 npm run build
 ```
 
-**Note:** The Vite development server does not run the Vercel API functions. Full local development requires a configured serverless environment.
+הקבצים המוכנים לפריסה נוצרים בתיקיית `dist`.
 
-## ⚙️ Environment Variables
+## משתני סביבה
 
-Configure the following variables in your Vercel project:
+יש להגדיר את משתני הסביבה הנדרשים בפרויקט Vercel.
 
-| Variable | Description |
-|----------|-------------|
-| `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin service account credentials |
-| `INVITE_CODE` | Private apartment registration code |
-| `MANAGER_CODE` | Emergency parking manager code |
-| `VAPID_PUBLIC_KEY` | Public Web Push key |
-| `VAPID_PRIVATE_KEY` | Private Web Push key |
-| `VAPID_SUBJECT` | Web Push contact identifier |
-| `VITE_VAPID_PUBLIC_KEY` | Public VAPID key exposed to the frontend |
+| משתנה | תיאור |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | פרטי Service Account של Firebase Admin |
+| `INVITE_CODE` | קוד ההזמנה להרשמת דיירים |
+| `MANAGER_CODE` | קוד מנהל לשחרור חניה במקרים חריגים |
+| `VAPID_PUBLIC_KEY` | מפתח ציבורי לשליחת התראות Web Push |
+| `VAPID_PRIVATE_KEY` | מפתח פרטי לשליחת התראות Web Push |
+| `VAPID_SUBJECT` | פרטי יצירת קשר עבור שירות ההתראות |
+| `VITE_VAPID_PUBLIC_KEY` | המפתח הציבורי המשמש את צד הלקוח |
 
-Never commit private credentials, secret codes, or service account JSON files to GitHub.
+### אבטחת משתני סביבה
 
-## 🔐 Security
+אין לשמור במאגר Git פרטי התחברות, מפתחות פרטיים, קודי מנהל או קובצי Service Account.
 
-The application uses Firebase Authentication and protected serverless API endpoints.
+יש לנהל מידע רגיש באמצעות משתני הסביבה של Vercel ולהימנע מחשיפתו בקוד צד הלקוח.
 
-- Users must authenticate before making API requests.
-- Apartment members register using a private invitation code.
-- Firestore Security Rules prevent direct client-side modifications.
-- Parking operations are processed through server-side transactions.
-- Only the current parking owner can perform a normal release.
-- Manager override requires a separate secret code.
-- Failed manager-code attempts are rate-limited per account.
-- Push subscriptions are associated with authenticated users.
+## אבטחת המערכת
 
-Firebase Admin SDK handles privileged database operations on the server.
+המערכת כוללת מספר מנגנוני אבטחה:
 
-## 🔔 Push Notifications
+- **אימות משתמשים** — שימוש ב־Firebase Authentication ואימות Token בצד השרת.
+- **בקרת הרשמה** — רישום משתמשים באמצעות קוד הזמנה.
+- **הפרדת הרשאות** — חסימת פעולות כתיבה ישירות מצד הלקוח באמצעות Firestore Security Rules.
+- **בעלות על חניה** — שחרור רגיל מתאפשר רק למשתמש שתפס את החניה.
+- **שחרור מנהל** — שימוש בקוד נפרד לביצוע שחרור במקרים חריגים.
+- **הגבלת ניסיונות** — הגבלת ניסיונות שגויים להזנת קוד מנהל לפי משתמש.
+- **שמירה על עקביות נתונים** — שימוש ב־Firestore Transactions.
+- **ניהול מנויי התראות** — שיוך מנויי Push למשתמשים מאומתים ובדיקת הרשאות.
 
-Members can enable notifications from the application settings.
+הפעולות המוגנות מתבצעות באמצעות Firebase Admin SDK בצד השרת.
 
-When the parking spot is released, subscribed members can receive a notification.
+## מערכת התראות
 
-On iPhone, Web Push requires the app to be added to the Home Screen on a supported iOS version.
+המערכת מאפשרת למשתמשים להפעיל או לכבות התראות Push מתוך הגדרות האפליקציה.
 
-Notification availability and delivery depend on device permissions, browser support, and operating-system restrictions.
+בעת שחרור החניה:
 
-## 📱 Install on Mobile
+1. השרת מעדכן את מצב החניה ב־Firestore.
+2. המערכת מאתרת מנויי התראות פעילים.
+3. נשלחת התראה למכשירים הרשומים, למעט המשתמש שביצע את השחרור.
 
-### iPhone
+קבלת ההתראות תלויה בהרשאות המשתמש, בתמיכת הדפדפן ובמגבלות מערכת ההפעלה.
 
-1. Open the app in Safari.
-2. Tap **Share**.
-3. Select **Add to Home Screen**.
-4. Launch the app from your Home Screen.
+במכשירי iPhone נדרשת התקנת האפליקציה במסך הבית ושימוש בגרסת iOS התומכת ב־Web Push.
 
-### Android
+## התקנה במכשירים ניידים
 
-1. Open the app in Chrome.
-2. Tap the three-dot menu.
-3. Select **Install app** or **Add to Home screen**.
-4. Launch the installed app.
+המערכת פותחה כ־Progressive Web App (PWA), ולכן ניתן להתקין אותה ישירות ממערכת הדפדפן, ללא צורך בהורדה מחנות האפליקציות.
 
-## ☁️ Deployment
+### התקנה באייפון
 
-The project is deployed using Vercel with GitHub integration.
+1. פותחים את המערכת בדפדפן Safari.
+2. לוחצים על כפתור השיתוף.
+3. בוחרים באפשרות "הוסף למסך הבית".
+4. פותחים את האפליקציה מהאייקון שנוצר.
 
-Changes pushed to the production branch trigger a new deployment.
+### התקנה באנדרואיד
 
-Before deploying, make sure:
+1. פותחים את המערכת בדפדפן Chrome.
+2. לוחצים על תפריט שלוש הנקודות.
+3. בוחרים "התקנת אפליקציה" או "הוספה למסך הבית".
+4. פותחים את האפליקציה ממסך הבית.
 
-- All required environment variables are configured.
-- Firebase Authentication is enabled.
-- Firestore is initialized.
-- The required Firestore Security Rules are published.
-- The Firebase Admin service account has the necessary permissions.
+## פריסה לסביבת Production
 
-## 📌 Roadmap
+המערכת מתארחת ב־Vercel ומחוברת למאגר GitHub.
 
-- [x] Real-time parking availability
-- [x] User registration with invitation code
-- [x] Parking ownership and release
-- [x] Manager emergency override
-- [x] Push notifications
-- [x] Mobile PWA support
-- [ ] Home screen parking status widget
-- [ ] Parking activity history
+עדכון ענף ה־Production מפעיל תהליך בנייה ופריסה אוטומטי.
 
-## 👨‍💻 Author
+לפני פריסה יש לוודא:
+
+- שכל משתני הסביבה הוגדרו.
+- ש־Firebase Authentication מופעל.
+- שמסד הנתונים Firestore הוגדר כראוי.
+- שכללי האבטחה הרלוונטיים פורסמו.
+- שלחשבון השירות של Firebase Admin קיימות ההרשאות הנדרשות.
+- שפונקציות ה־API פועלות כראוי.
+
+## פיתוחים עתידיים
+
+- [x] הצגת מצב חניה בזמן אמת
+- [x] הרשמת משתמשים באמצעות קוד הזמנה
+- [x] תפיסה ושחרור חניה
+- [x] שחרור חירום באמצעות קוד מנהל
+- [x] התראות Push
+- [x] תמיכה ב־PWA למכשירים ניידים
+- [ ] וידג'ט להצגת מצב החניה במסך הבית
+- [ ] היסטוריית שימוש בחניה
+- [ ] ממשק ניהול מורחב
+
+## מפתח הפרויקט
 
 **Harel Amar**
 
-GitHub: [@HarelAmar1](https://github.com/HarelAmar1)
+GitHub: https://github.com/HarelAmar1
 
 ---
 
-Built to make shared parking simple. 🚗
+Our Parking — מערכת פשוטה, נגישה ומאובטחת לניהול חניה משותפת.
