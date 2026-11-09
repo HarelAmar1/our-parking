@@ -1,17 +1,81 @@
-# החניה שלנו — כניסה עם שם בלבד
+# החניה שלנו — גרסה 2
 
-Firebase Project: `parking-b6302` / Firestore `parking/current`.
+שדרוג לאפליקציית PWA הקיימת: קוד הזמנה, שינוי שם/משתמש, שחרור חירום והתראות Push בפינוי החניה.
 
-## לפני פרסום
-1. Firebase Authentication → Sign-in method → Anonymous → Enabled.
-2. Firebase Firestore → Rules: replace current rules with `firestore.rules`, then Publish.
-3. If the parking spot is currently occupied by the **old email/password account**, release it from the old live site first; otherwise only a Firebase console admin can reset it to unoccupied.
-4. Run `npm install && npm run build`, then push to GitHub. Vercel should redeploy automatically.
-5. Test on a new browser or private tab first, enter a name, claim and release the spot.
+## לפני שמתחילים — חשוב
 
-## Important security limitation
-Anyone who knows the public app URL can create an anonymous account and enter any name. This is **not** verification of roommate identity. Same name on a new device is a different account and cannot release the old device's claim. Clearing browser storage may similarly lose the anonymous account. For a private roommates-only app, introduce an invitation system or individually provisioned accounts.
+הגרסה הזאת דורשת **Vercel Functions** וסודות שרת. אל תפרסם את שינויי ה־Firestore Rules לפני שהשרת החדש נפרס ומוגדר, כי הוא יחסום את הגרסה הישנה.
 
-## Data structure
-`members/{anonymousUID}`: `{ name: string }` created on first use.
-`parking/current`: `{ occupied: boolean, occupiedBy: string, occupiedByName: string, updated: timestamp }`.
+אין לשים בקוד או ב־GitHub מפתחות פרטיים, קוד דירה או קוד מנהל. **לעולם אל תכניס את JSON חשבון השירות לתיקיית `src` או למשתנה `VITE_`**.
+
+### 1. גיבוי
+
+```bash
+cd ~/repos/our-parking
+git status
+git branch backup-before-v2
+git status
+```
+
+פנה את החניה לפני מעבר הגרסה כדי להימנע מבעלות תקועה. משתמשים שנרשמו בעבר ממשיכים לפעול.
+
+### 2. העתקת הקבצים
+
+חלץ את ה־ZIP והעתק את *תוכנו* (כולל `api`, `server`, `src`, `public`) לשורש המאגר. לא למחוק את `.git`. אין להעלות את `dist`, `node_modules` או `.env`.
+
+```bash
+npm install
+npm run build
+```
+
+`npm run dev` מציג את המסך אבל פניות ל־`/api` אינן נענות על ידי Vite לבדו. לבדיקה מלאה יש להשתמש ב־Vercel deployment או `vercel dev` עם משתני הסביבה.
+
+### 3. יצירת פרטי Firebase Admin
+
+Firebase Console → Project Settings → Service accounts → Generate new private key. שמור את ה־JSON במקום פרטי. ב־Vercel > Project Settings > Environment Variables צור את `FIREBASE_SERVICE_ACCOUNT_JSON` והדבק את כל ה־JSON כמחרוזת אחת (לא בתוך קוד הפרויקט). חשבון שירות הוא מפתח רב-עוצמה; אין לשתף אותו. לנהל ולהחליף מפתחות במקרה של דליפה.
+
+### 4. קודי כניסה
+
+הגדר ב־Vercel שני משתני שרת נפרדים:
+- `INVITE_CODE`: קוד הזמנה ארוך ואקראי (מומלץ 16 תווים אקראיים לפחות). כל שותף חדש יקליד אותו בהרשמה הראשונה בלבד.
+- `MANAGER_CODE`: **קוד אחר** וארוך (מומלץ 16 תווים אקראיים לפחות), שמור רק אצל המנהל. מאפשר שחרור חירום של חניה תפוסה.
+
+אל תשתמש בקוד קצר של 4 ספרות; מנגנון זה לא כולל חסימת brute-force מובנית, ולכן קודים ארוכים ואקראיים חיוניים. מי שיודע את קוד ההזמנה יכול ליצור חשבונות — שתף אותו רק עם השותפים. לשינוי קוד קיים, ערוך את משתני Vercel ופרסם מחדש (Redeploy).
+
+### 5. התראות Push
+
+Apple תומכת בהתראות Web Push **באייפון עם iOS 16.4 ומעלה**, כאשר ה־PWA הותקנה במסך הבית ונפתחה משם, ורק אחרי לחיצה על כפתור אישור ההתראות. המשתמש בוחר אם לאשר אותן.
+
+צור צמד מפתחות VAPID על המחשב (ללא העלאה ל־Git):
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+הוסף ל־Vercel Environment Variables:
+- `VAPID_PUBLIC_KEY` = המפתח הציבורי.
+- `VAPID_PRIVATE_KEY` = המפתח הפרטי.
+- `VAPID_SUBJECT` = `mailto:your-real-email@example.com` (להחליף באימייל שלך).
+- `VITE_VAPID_PUBLIC_KEY` = אותו מפתח ציבורי, לצורך בניית האפליקציה בדפדפן.
+
+**אין לשים `VAPID_PRIVATE_KEY` במשתנה `VITE_`.** אם לא תגדיר את מפתחות VAPID, שאר האפליקציה יכולה לעבוד אבל ההתראות לא יפעלו.
+
+Push נשלח כשהחניה מתפנה באמצעות API מאומת; משלוח אינו מובטח (תלוי בחיבור ובהרשאות המכשיר). שחרור חניה נשמר גם אם שירות ההתראות נכשל. מינוי להתראות הוא לפי התקנת מכשיר; לחיצה על הכפתור בכל מכשיר רושמת אותו.
+
+### 6. פרסום סדר פעולות
+
+1. הגדר ב־Vercel את כל משתני הסביבה, לרבות `VITE_VAPID_PUBLIC_KEY`.
+2. בצע Commit+Push ל־main — Vercel יפרסם את פונקציות `/api` והאפליקציה.
+3. בדוק שהאתר נפתח. **עדיין לא לפרסם את `firestore.rules` החדשים לפני שה־API עובד**.
+4. כעת Firebase Firestore → Rules → הדבק את `firestore.rules` החדשים → Publish. חוקי השרת החדשים מגבילים קריאה למשתמש רשום ומונעים כתיבה ישירה של לקוחות; כל שינוי נעשה דרך API שבודק Firebase ID token.
+5. בדוק: הרשמה חדשה עם קוד, תפיסה, פינוי, שינוי שם, שחרור עם קוד מנהל, הרשאת התראות ופינוי ממכשיר אחר.
+
+**הערה למיגרציה:** חשבונות שכבר נוצרו ב־`members` נשארים רשומים, גם אם אין להם שדה קוד. להרשאות מחמירות אפשר בהמשך לעבור לאוסף אישורים מנהלתי ולבטל חשבונות ישנים.
+
+### 7. חשבונות/החלפת מכשיר
+
+"שינוי שם" שומר את אותו UID. "החלפת משתמש" מתנתק מה־UID האנונימי ויוצר משתמש חדש, שמחייב שם וקוד הזמנה. חשבון אנונימי אינו זהות ניידת בין מכשירים. אם נמחקים נתוני הדפדפן או עוברים מכשיר, אי אפשר להבטיח שחזור בעלות החניה; מנהל יכול לפנות אותה בקוד החירום. **שם בלבד אינו מוכיח זהות של אדם**.
+
+### 8. עלויות ואבטחה
+
+מסד הנתונים יכול להישאר ב־Spark בהתאם למכסות; ה־API פועל דרך Vercel Functions בכפוף למסלול/מכסות Vercel. חשבון שירות עם הרשאות Admin עוקף Firestore Rules ולכן חשוב לשמור אותו רק בשרת. יש להגביל גישה למפתחות ב־Vercel ולנהל הוצאות/מכסות. מומלץ להוסיף בעתיד הגבלת קצב (rate limiting) בהרשמה ובקוד מנהל, ו־App Check אם רלוונטי.
