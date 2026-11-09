@@ -53,10 +53,16 @@ function App() {
     setMember(null);
     setMemberReady(false);
     if (!user) return;
-    return onSnapshot(doc(db, 'members', user.uid), (snap) => {
-      setMember(snap.exists() ? snap.data() : null);
-      setMemberReady(!snap.metadata.fromCache);
-    }, (err) => { setMessage(readableError(err)); setMemberReady(false); });
+    return onSnapshot(
+        doc(db, 'members', user.uid),
+        { includeMetadataChanges: true },
+        (snap) => {
+          setMember(snap.exists() ? snap.data() : null);
+      setMemberReady(
+          !snap.metadata.fromCache &&
+          !snap.metadata.hasPendingWrites
+      );
+      }, (err) => { setMessage(readableError(err)); setMemberReady(false); });
   }, [user]);
 
   useEffect(() => {
